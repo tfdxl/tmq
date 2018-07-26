@@ -41,24 +41,35 @@ import java.util.concurrent.TimeUnit;
  * Store all metadata downtime for recovery, data protection reliability
  */
 public class CommitLog {
+
     // Message's MAGIC CODE daa320a7
     public final static int MESSAGE_MAGIC_CODE = 0xAABBCCDD ^ 1880681586 + 8;
+
     private static final Logger log = LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
+
     // End of file empty MAGIC CODE cbd43194
     private final static int BLANK_MAGIC_CODE = 0xBBCCDDEE ^ 1880681586 + 8;
+
     private final MappedFileQueue mappedFileQueue;
+
     private final DefaultMessageStore defaultMessageStore;
+
     private final FlushCommitLogService flushCommitLogService;
 
     //If TransientStorePool enabled, we must flush message to FileChannel at fixed periods
     private final FlushCommitLogService commitLogService;
 
     private final AppendMessageCallback appendMessageCallback;
+
     private final ThreadLocal<MessageExtBatchEncoder> batchEncoderThreadLocal;
+
     private HashMap<String/* topic-queueid */, Long/* offset */> topicQueueTable = new HashMap<String, Long>(1024);
+
     private volatile long confirmOffset = -1L;
 
     private volatile long beginTimeInLock = 0;
+
+    //存放消息锁
     private final PutMessageLock putMessageLock;
 
     public CommitLog(final DefaultMessageStore defaultMessageStore) {
@@ -66,15 +77,22 @@ public class CommitLog {
                 defaultMessageStore.getMessageStoreConfig().getMapedFileSizeCommitLog(), defaultMessageStore.getAllocateMappedFileService());
         this.defaultMessageStore = defaultMessageStore;
 
+        /**
+         * 刷盘的方式
+         */
         if (FlushDiskType.SYNC_FLUSH == defaultMessageStore.getMessageStoreConfig().getFlushDiskType()) {
+
+            //同步
             this.flushCommitLogService = new GroupCommitService();
         } else {
+            //异步
             this.flushCommitLogService = new FlushRealTimeService();
         }
 
         this.commitLogService = new CommitRealTimeService();
 
         this.appendMessageCallback = new DefaultAppendMessageCallback(defaultMessageStore.getMessageStoreConfig().getMaxMessageSize());
+
         batchEncoderThreadLocal = new ThreadLocal<MessageExtBatchEncoder>() {
             @Override
             protected MessageExtBatchEncoder initialValue() {
@@ -85,6 +103,11 @@ public class CommitLog {
 
     }
 
+    /**
+     * 加载目录下面的所有的烂文件
+     *
+     * @return
+     */
     public boolean load() {
         boolean result = this.mappedFileQueue.load();
         log.info("load commit log " + (result ? "OK" : "Failed"));
@@ -715,16 +738,27 @@ public class CommitLog {
             // global
             messageExtBatch.setStoreTimestamp(beginLockTimestamp);
 
+            /**
+             * 文件已经满了，那么创建新的文件
+             */
             if (null == mappedFile || mappedFile.isFull()) {
                 mappedFile = this.mappedFileQueue.getLastMappedFile(0); // Mark: NewFile may be cause noise
             }
+
+            /**
+             * 创建新的文件失败了
+             */
             if (null == mappedFile) {
                 log.error("Create mapped file1 error, topic: {} clientAddr: {}", messageExtBatch.getTopic(), messageExtBatch.getBornHostString());
                 beginTimeInLock = 0;
                 return new PutMessageResult(PutMessageStatus.CREATE_MAPEDFILE_FAILED, null);
             }
 
+            /**
+             * 在文件里面追加
+             */
             result = mappedFile.appendMessages(messageExtBatch, this.appendMessageCallback);
+
             switch (result.getStatus()) {
                 case PUT_OK:
                     break;
@@ -940,19 +974,30 @@ public class CommitLog {
         }
     }
 
+    /**
+     * 异步实时刷盘服务
+     */
     class FlushRealTimeService extends FlushCommitLogService {
+
         private long lastFlushTimestamp = 0;
+
         private long printTimes = 0;
 
         public void run() {
+
             CommitLog.log.info(this.getServiceName() + " service started");
 
             while (!this.isStopped()) {
+
+                //Whether schedule flush,default is real-time
                 boolean flushCommitLogTimed = CommitLog.this.defaultMessageStore.getMessageStoreConfig().isFlushCommitLogTimed();
 
                 int interval = CommitLog.this.defaultMessageStore.getMessageStoreConfig().getFlushIntervalCommitLog();
+
+                //刷盘最少页
                 int flushPhysicQueueLeastPages = CommitLog.this.defaultMessageStore.getMessageStoreConfig().getFlushCommitLogLeastPages();
 
+                //刷盘的时间间隔
                 int flushPhysicQueueThoroughInterval =
                         CommitLog.this.defaultMessageStore.getMessageStoreConfig().getFlushCommitLogThoroughInterval();
 
@@ -960,6 +1005,7 @@ public class CommitLog {
 
                 // Print flush progress
                 long currentTimeMillis = System.currentTimeMillis();
+
                 if (currentTimeMillis >= (this.lastFlushTimestamp + flushPhysicQueueThoroughInterval)) {
                     this.lastFlushTimestamp = currentTimeMillis;
                     flushPhysicQueueLeastPages = 0;
@@ -973,6 +1019,9 @@ public class CommitLog {
                         this.waitForRunning(interval);
                     }
 
+                    /**
+                     * 打印进度？
+                     */
                     if (printFlushProgress) {
                         this.printFlushProgress();
                     }
