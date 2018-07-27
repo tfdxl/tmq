@@ -435,9 +435,19 @@ public class MappedFileQueue {
         return deleteCount;
     }
 
+    /**
+     * 通过offset删除过期的数据
+     *
+     * @param offset
+     * @param unitSize
+     * @return
+     */
     public int deleteExpiredFileByOffset(long offset, int unitSize) {
+
+        //获取所有的MappedFile
         Object[] mfs = this.copyMappedFiles(0);
 
+        //这些文件将要被删除
         List<MappedFile> files = new ArrayList<MappedFile>();
         int deleteCount = 0;
         if (null != mfs) {

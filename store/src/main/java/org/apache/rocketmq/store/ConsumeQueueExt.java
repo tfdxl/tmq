@@ -28,6 +28,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
+ * consumequeue的扩展信息，存储了一些不是很重要的数据，比如消息存储的时间，过滤用的bit map
  * Extend of consume queue, to store something not important,
  * such as message store time, filter bit map and etc.
  * <p/>
@@ -37,14 +38,22 @@ import java.util.List;
  * <li>4. Pls keep this file small.</li>
  */
 public class ConsumeQueueExt {
+
     private static final Logger log = LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
 
+    //目录文件
     private final MappedFileQueue mappedFileQueue;
+
     private final String topic;
+
     private final int queueId;
 
     private final String storePath;
+
+    //文件大小
     private final int mappedFileSize;
+
+    //临时的容器
     private ByteBuffer tempContainer;
 
     public static final int END_BLANK_DATA_LENGTH = 4;
@@ -82,6 +91,9 @@ public class ConsumeQueueExt {
 
         this.mappedFileQueue = new MappedFileQueue(queueDir, mappedFileSize, null);
 
+        /**
+         * 分配一个bitmap
+         */
         if (bitMapLength > 0) {
             this.tempContainer = ByteBuffer.allocate(
                     bitMapLength / Byte.SIZE

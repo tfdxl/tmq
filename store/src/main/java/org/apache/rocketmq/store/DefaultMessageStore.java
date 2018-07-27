@@ -1687,11 +1687,13 @@ public class DefaultMessageStore implements MessageStore {
                 logicsMsgTimestamp = DefaultMessageStore.this.getStoreCheckpoint().getLogicsMsgTimestamp();
             }
 
+            //获取topic --->queueId --->ConsumeQueue
             ConcurrentMap<String, ConcurrentMap<Integer, ConsumeQueue>> tables = DefaultMessageStore.this.consumeQueueTable;
 
             for (ConcurrentMap<Integer, ConsumeQueue> maps : tables.values()) {
                 for (ConsumeQueue cq : maps.values()) {
                     boolean result = false;
+                    //重试进行flush
                     for (int i = 0; i < retryTimes && !result; i++) {
                         result = cq.flush(flushConsumeQueueLeastPages);
                     }
@@ -1707,6 +1709,7 @@ public class DefaultMessageStore implements MessageStore {
         }
 
         public void run() {
+
             DefaultMessageStore.log.info(this.getServiceName() + " service started");
 
             while (!this.isStopped()) {

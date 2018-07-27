@@ -33,12 +33,18 @@ public abstract class ServiceThread implements Runnable {
     protected volatile AtomicBoolean hasNotified = new AtomicBoolean(false);
     protected volatile boolean stopped = false;
 
+    /**
+     * 把自己包装到线程
+     */
     public ServiceThread() {
         this.thread = new Thread(this, this.getServiceName());
     }
 
     public abstract String getServiceName();
 
+    /**
+     * 调用线程的start方法
+     */
     public void start() {
         this.thread.start();
     }
