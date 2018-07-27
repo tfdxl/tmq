@@ -114,6 +114,9 @@ public abstract class NettyRemotingAbstract {
      * @param event Netty event instance.
      */
     public void putNettyEvent(final NettyEvent event) {
+        /**
+         * 交给内部的线程池子进行处理
+         */
         this.nettyEventExecutor.putNettyEvent(event);
     }
 
