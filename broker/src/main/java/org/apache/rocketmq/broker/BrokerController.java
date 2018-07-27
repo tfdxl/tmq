@@ -564,6 +564,7 @@ public class BrokerController {
     }
 
     public void shutdown() {
+
         if (this.brokerStatsManager != null) {
             this.brokerStatsManager.shutdown();
         }

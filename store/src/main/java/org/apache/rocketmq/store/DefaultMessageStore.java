@@ -1208,13 +1208,6 @@ public class DefaultMessageStore implements MessageStore {
                 }
             }
         }, 1, 1, TimeUnit.SECONDS);
-
-        // this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
-        // @Override
-        // public void run() {
-        // DefaultMessageStore.this.cleanExpiredConsumerQueue();
-        // }
-        // }, 1, 1, TimeUnit.HOURS);
     }
 
     private void cleanFilesPeriodically() {
@@ -1237,6 +1230,7 @@ public class DefaultMessageStore implements MessageStore {
     }
 
     private boolean isTempFileExist() {
+        //检查abort文件是否是存在的
         String fileName = StorePathConfigHelper.getAbortFile(this.messageStoreConfig.getStorePathRootDir());
         File file = new File(fileName);
         return file.exists();
@@ -1285,11 +1279,15 @@ public class DefaultMessageStore implements MessageStore {
     }
 
     private void recover(final boolean lastExitOK) {
+
+        //首先恢复逻辑队列
         this.recoverConsumeQueue();
 
         if (lastExitOK) {
+            //正常的恢复
             this.commitLog.recoverNormally();
         } else {
+            //异常的恢复
             this.commitLog.recoverAbnormally();
         }
 
