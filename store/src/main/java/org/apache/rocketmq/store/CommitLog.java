@@ -846,9 +846,13 @@ public class CommitLog {
 
     //物理地址+size拉取消消息
     public SelectMappedBufferResult getMessage(final long offset, final int size) {
-        int mappedFileSize = this.defaultMessageStore.getMessageStoreConfig().getMapedFileSizeCommitLog();
-        MappedFile mappedFile = this.mappedFileQueue.findMappedFileByOffset(offset, offset == 0);
+        //获取commitLog文件的大小
+        final int mappedFileSize = this.defaultMessageStore.getMessageStoreConfig().getMapedFileSizeCommitLog();
+
+        //找到对应的commitlog文件
+        final MappedFile mappedFile = this.mappedFileQueue.findMappedFileByOffset(offset, offset == 0);
         if (mappedFile != null) {
+            //计算文件内的pos
             int pos = (int) (offset % mappedFileSize);
             return mappedFile.selectMappedBuffer(pos, size);
         }

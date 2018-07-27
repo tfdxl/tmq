@@ -403,13 +403,18 @@ public class MappedFile extends ReferenceResource {
     }
 
     public SelectMappedBufferResult selectMappedBuffer(int pos, int size) {
+        //能读取的位置
         int readPosition = getReadPosition();
+        //必须保证读的内容在读取的范围内
         if ((pos + size) <= readPosition) {
 
+            //hold资源
             if (this.hold()) {
+                //切片
                 ByteBuffer byteBuffer = this.mappedByteBuffer.slice();
                 byteBuffer.position(pos);
                 ByteBuffer byteBufferNew = byteBuffer.slice();
+                //设置limit
                 byteBufferNew.limit(size);
                 return new SelectMappedBufferResult(this.fileFromOffset + pos, byteBufferNew, size, this);
             } else {
