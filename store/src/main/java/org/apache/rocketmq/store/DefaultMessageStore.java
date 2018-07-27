@@ -48,9 +48,11 @@ import java.util.concurrent.atomic.AtomicLong;
 import static org.apache.rocketmq.store.config.BrokerRole.SLAVE;
 
 public class DefaultMessageStore implements MessageStore {
+
     private static final Logger log = LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
 
     private final MessageStoreConfig messageStoreConfig;
+
     // CommitLog
     private final CommitLog commitLog;
 
@@ -77,12 +79,16 @@ public class DefaultMessageStore implements MessageStore {
     private final TransientStorePool transientStorePool;
 
     private final RunningFlags runningFlags = new RunningFlags();
+
     private final SystemClock systemClock = new SystemClock();
 
     private final ScheduledExecutorService scheduledExecutorService =
             Executors.newSingleThreadScheduledExecutor(new ThreadFactoryImpl("StoreScheduledThread"));
+
     private final BrokerStatsManager brokerStatsManager;
+
     private final MessageArrivingListener messageArrivingListener;
+
     private final BrokerConfig brokerConfig;
 
     private volatile boolean shutdown = true;
@@ -441,18 +447,25 @@ public class DefaultMessageStore implements MessageStore {
 
         long beginTime = this.getSystemClock().now();
 
-        GetMessageStatus status = GetMessageStatus.NO_MESSAGE_IN_QUEUE;
-        long nextBeginOffset = offset;
+        //获取消息的转改
+        GetMessageStatus status;
+        //下一个开始的offset
+        long nextBeginOffset;
         long minOffset = 0;
         long maxOffset = 0;
 
+        //创建一个获取大小
         GetMessageResult getResult = new GetMessageResult();
 
+        //物理最大的offset
         final long maxOffsetPy = this.commitLog.getMaxOffset();
 
-        ConsumeQueue consumeQueue = findConsumeQueue(topic, queueId);
+        //先去找ConsumeQueue
+        final ConsumeQueue consumeQueue = findConsumeQueue(topic, queueId);
         if (consumeQueue != null) {
+            //最小的offset
             minOffset = consumeQueue.getMinOffsetInQueue();
+            //最大的offset
             maxOffset = consumeQueue.getMaxOffsetInQueue();
 
             if (maxOffset == 0) {
@@ -485,8 +498,14 @@ public class DefaultMessageStore implements MessageStore {
                         final boolean diskFallRecorded = this.messageStoreConfig.isDiskFallRecorded();
                         ConsumeQueueExt.CqExtUnit cqExtUnit = new ConsumeQueueExt.CqExtUnit();
                         for (; i < bufferConsumeQueue.getSize() && i < maxFilterMessageCount; i += ConsumeQueue.CQ_STORE_UNIT_SIZE) {
+
+                            //开始的物理地址
                             long offsetPy = bufferConsumeQueue.getByteBuffer().getLong();
+
+                            //物理大小
                             int sizePy = bufferConsumeQueue.getByteBuffer().getInt();
+
+                            //tag的code
                             long tagsCode = bufferConsumeQueue.getByteBuffer().getLong();
 
                             maxPhyOffsetPulling = offsetPy;
@@ -535,6 +554,7 @@ public class DefaultMessageStore implements MessageStore {
                                 continue;
                             }
 
+                            //消息过滤
                             if (messageFilter != null
                                     && !messageFilter.isMatchedByCommitLog(selectResult.getByteBuffer().slice(), null)) {
                                 if (getResult.getBufferTotalSize() == 0) {
@@ -545,6 +565,7 @@ public class DefaultMessageStore implements MessageStore {
                                 continue;
                             }
 
+                            //统计计数+1
                             this.storeStatsService.getGetMessageTransferedMsgCount().incrementAndGet();
                             getResult.addMessage(selectResult);
                             status = GetMessageStatus.FOUND;
@@ -556,11 +577,14 @@ public class DefaultMessageStore implements MessageStore {
                             brokerStatsManager.recordDiskFallBehindSize(group, topic, queueId, fallBehind);
                         }
 
+                        //下一个开始的地址
                         nextBeginOffset = offset + (i / ConsumeQueue.CQ_STORE_UNIT_SIZE);
 
                         long diff = maxOffsetPy - maxPhyOffsetPulling;
                         long memory = (long) (StoreUtil.TOTAL_PHYSICAL_MEMORY_SIZE
                                 * (this.messageStoreConfig.getAccessMessageInMemoryMaxRatio() / 100.0));
+
+                        //建议slave开始拉取
                         getResult.setSuggestPullingFromSlave(diff > memory);
                     } finally {
 
@@ -578,15 +602,20 @@ public class DefaultMessageStore implements MessageStore {
             nextBeginOffset = nextOffsetCorrection(offset, 0);
         }
 
+        //根据结果分别追加计数
         if (GetMessageStatus.FOUND == status) {
             this.storeStatsService.getGetMessageTimesTotalFound().incrementAndGet();
         } else {
             this.storeStatsService.getGetMessageTimesTotalMiss().incrementAndGet();
         }
+
+        //消耗的时间
         long eclipseTime = this.getSystemClock().now() - beginTime;
         this.storeStatsService.setGetMessageEntireTimeMax(eclipseTime);
 
+        //状态
         getResult.setStatus(status);
+        //下一次开始的offset
         getResult.setNextBeginOffset(nextBeginOffset);
         getResult.setMaxOffset(maxOffset);
         getResult.setMinOffset(minOffset);
@@ -1248,6 +1277,8 @@ public class DefaultMessageStore implements MessageStore {
                         } catch (NumberFormatException e) {
                             continue;
                         }
+
+                        //加载所有的文件
                         ConsumeQueue logic = new ConsumeQueue(
                                 topic,
                                 queueId,

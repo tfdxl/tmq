@@ -52,13 +52,6 @@ public class SelectMappedBufferResult {
         return mappedFile;
     }
 
-//    @Override
-//    protected void finalize() {
-//        if (this.mappedFile != null) {
-//            this.release();
-//        }
-//    }
-
     public synchronized void release() {
         if (this.mappedFile != null) {
             this.mappedFile.release();
