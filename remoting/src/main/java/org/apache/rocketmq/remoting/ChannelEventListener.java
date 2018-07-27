@@ -19,6 +19,7 @@ package org.apache.rocketmq.remoting;
 import io.netty.channel.Channel;
 
 public interface ChannelEventListener {
+
     void onChannelConnect(final String remoteAddr, final Channel channel);
 
     void onChannelClose(final String remoteAddr, final Channel channel);

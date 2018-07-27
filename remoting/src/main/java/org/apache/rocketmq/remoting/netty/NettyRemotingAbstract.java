@@ -457,7 +457,7 @@ public abstract class NettyRemotingAbstract {
             try {
                 channel.writeAndFlush(request).addListener(new ChannelFutureListener() {
                     @Override
-                    public void operationComplete(ChannelFuture f) throws Exception {
+                    public void operationComplete(ChannelFuture f) {
                         once.release();
                         if (!f.isSuccess()) {
                             log.warn("send a request command to channel <" + channel.remoteAddress() + "> failed.");
@@ -486,7 +486,9 @@ public abstract class NettyRemotingAbstract {
     }
 
     class NettyEventExecutor extends ServiceThread {
+
         private final LinkedBlockingQueue<NettyEvent> eventQueue = new LinkedBlockingQueue<NettyEvent>();
+
         private final int maxSize = 10000;
 
         public void putNettyEvent(final NettyEvent event) {
@@ -501,11 +503,14 @@ public abstract class NettyRemotingAbstract {
         public void run() {
             log.info(this.getServiceName() + " service started");
 
+            //获取事件监听器
             final ChannelEventListener listener = NettyRemotingAbstract.this.getChannelEventListener();
 
             while (!this.isStopped()) {
                 try {
+                    //获取时间
                     NettyEvent event = this.eventQueue.poll(3000, TimeUnit.MILLISECONDS);
+                    //两个都不是空的
                     if (event != null && listener != null) {
                         switch (event.getType()) {
                             case IDLE:

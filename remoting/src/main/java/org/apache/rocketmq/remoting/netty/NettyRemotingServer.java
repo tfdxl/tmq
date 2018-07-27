@@ -193,6 +193,7 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
                                 .addLast(defaultEventExecutorGroup,
                                         new NettyEncoder(),
                                         new NettyDecoder(),
+                                        //心跳检测的玩意
                                         new IdleStateHandler(0, 0, nettyServerConfig.getServerChannelMaxIdleTimeSeconds()),
                                         new NettyConnectManageHandler(),
                                         new NettyServerHandler()

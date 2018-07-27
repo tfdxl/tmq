@@ -34,6 +34,9 @@ public class KVConfigManager {
 
     private static final Logger log = LoggerFactory.getLogger(LoggerName.NAMESRV_LOGGER_NAME);
 
+    /**
+     * 总控制器
+     */
     private final NamesrvController namesrvController;
 
     /**
