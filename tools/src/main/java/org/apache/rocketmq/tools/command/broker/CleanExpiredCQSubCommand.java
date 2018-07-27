@@ -56,7 +56,7 @@ public class CleanExpiredCQSubCommand implements SubCommand {
         defaultMQAdminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
 
         try {
-            boolean result = false;
+            boolean result;
             defaultMQAdminExt.start();
             if (commandLine.hasOption('b')) {
                 String addr = commandLine.getOptionValue('b').trim();
