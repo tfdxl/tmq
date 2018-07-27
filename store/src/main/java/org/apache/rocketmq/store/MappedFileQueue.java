@@ -80,13 +80,22 @@ public class MappedFileQueue {
         }
     }
 
+    /**
+     * 获取在指定时间点后更新的文件
+     *
+     * @param timestamp
+     * @return
+     */
     public MappedFile getMappedFileByTime(final long timestamp) {
         Object[] mfs = this.copyMappedFiles(0);
 
-        if (null == mfs)
+        if (null == mfs) {
             return null;
+        }
 
+        //遍历文件
         for (int i = 0; i < mfs.length; i++) {
+            //修改时间大于指定时间
             MappedFile mappedFile = (MappedFile) mfs[i];
             if (mappedFile.getLastModifiedTimestamp() >= timestamp) {
                 return mappedFile;
@@ -107,23 +116,36 @@ public class MappedFileQueue {
         return mfs;
     }
 
+    //清理指定偏移量所在文件之后的文件????
     public void truncateDirtyFiles(long offset) {
+
+        /**
+         * 首先找到文件
+         */
         List<MappedFile> willRemoveFiles = new ArrayList<MappedFile>();
 
         for (MappedFile file : this.mappedFiles) {
             long fileTailOffset = file.getFileFromOffset() + this.mappedFileSize;
             if (fileTailOffset > offset) {
+
+                //   startOffset <= offset < fileTailOffset
                 if (offset >= file.getFileFromOffset()) {
+                    //重新设置写位置
                     file.setWrotePosition((int) (offset % this.mappedFileSize));
+                    //重新设置提交的位置
                     file.setCommittedPosition((int) (offset % this.mappedFileSize));
+                    //重新设置刷新的位置
                     file.setFlushedPosition((int) (offset % this.mappedFileSize));
                 } else {
+                    //整个文件都大于给定的offset,那么直接删除
                     file.destroy(1000);
+                    //放在要删除的数组
                     willRemoveFiles.add(file);
                 }
             }
         }
 
+        //删除内存中的数据结构
         this.deleteExpiredFile(willRemoveFiles);
     }
 
@@ -131,6 +153,7 @@ public class MappedFileQueue {
 
         if (!files.isEmpty()) {
 
+            //首先进行一轮遍历，剔除掉mappedFiles不包含的文件
             Iterator<MappedFile> iterator = files.iterator();
             while (iterator.hasNext()) {
                 MappedFile cur = iterator.next();
@@ -140,6 +163,7 @@ public class MappedFileQueue {
                 }
             }
 
+            //然后删除内存中的保存的结构
             try {
                 if (!this.mappedFiles.removeAll(files)) {
                     log.error("deleteExpiredFile remove failed.");
@@ -151,6 +175,7 @@ public class MappedFileQueue {
     }
 
     public boolean load() {
+        //目录下面的文件
         File dir = new File(this.storePath);
         File[] files = dir.listFiles();
         if (files != null) {
@@ -158,6 +183,7 @@ public class MappedFileQueue {
             Arrays.sort(files);
             for (File file : files) {
 
+                //文件大小不对
                 if (file.length() != this.mappedFileSize) {
                     log.warn(file + "\t" + file.length()
                             + " length not matched message store config value, ignore it");
@@ -165,8 +191,10 @@ public class MappedFileQueue {
                 }
 
                 try {
+                    //映射文件到内存
                     MappedFile mappedFile = new MappedFile(file.getPath(), mappedFileSize);
 
+                    //设置写入的位置
                     mappedFile.setWrotePosition(this.mappedFileSize);
                     mappedFile.setFlushedPosition(this.mappedFileSize);
                     mappedFile.setCommittedPosition(this.mappedFileSize);
@@ -183,11 +211,16 @@ public class MappedFileQueue {
     }
 
     public long howMuchFallBehind() {
-        if (this.mappedFiles.isEmpty())
-            return 0;
 
+        //没有任何的文件
+        if (this.mappedFiles.isEmpty()) {
+            return 0;
+        }
+
+        //刷新的位置
         long committed = this.flushedWhere;
         if (committed != 0) {
+            //最后一个文件
             MappedFile mappedFile = this.getLastMappedFile(0, false);
             if (mappedFile != null) {
                 return (mappedFile.getFileFromOffset() + mappedFile.getWrotePosition()) - committed;
@@ -197,24 +230,38 @@ public class MappedFileQueue {
         return 0;
     }
 
+    //获取或创建最后一个文件
     public MappedFile getLastMappedFile(final long startOffset, boolean needCreate) {
         long createOffset = -1;
+
+        //列表为空或者最后一个对象对应的文件已经写满，则创建一个新的文件（即新的 MapedFile 对象）
         MappedFile mappedFileLast = getLastMappedFile();
 
+        //计算文件的开始的offset
         if (mappedFileLast == null) {
             createOffset = startOffset - (startOffset % this.mappedFileSize);
         }
 
+        //文件满了
         if (mappedFileLast != null && mappedFileLast.isFull()) {
+            //直接创建1G+最后一个创建的文件的位置的新的文件
             createOffset = mappedFileLast.getFileFromOffset() + this.mappedFileSize;
         }
 
         if (createOffset != -1 && needCreate) {
+
+            //计算下一个文件名
             String nextFilePath = this.storePath + File.separator + UtilAll.offset2FileName(createOffset);
-            String nextNextFilePath = this.storePath + File.separator
-                    + UtilAll.offset2FileName(createOffset + this.mappedFileSize);
+            //下下一个文件名
+            String nextNextFilePath = this.storePath + File.separator + UtilAll.offset2FileName(createOffset + this.mappedFileSize);
+
             MappedFile mappedFile = null;
 
+            //若在 Broker 启动初始化的时候会创建了后台服务线程（ AllocateMapedFileService 服务） ，则调用
+            //AllocateMapedFileService.putRequestAndReturnMapedFile 方法，在该方法中用下一个文件的文件路径、下下一个文件的路径、文件大小为参数初始化
+            //AllocateRequest 对象，并放入该服务线程的requestQueue:PriorityBlockingQueue<AllocateRequest>变量中，由该线程在
+            //后台监听 requestQueue 队列，若该队列中存在 AllocateRequest 对象，则利用该对象的变量值创建 MapedFile 对象（即在磁盘中生成了对应的物理文件） ，并
+            //存入 AllocateRequest 对象的 MapedFile 变量中，并且在下一个新文件之后继续将下下一个新文件也创建了
             if (this.allocateMappedFileService != null) {
                 mappedFile = this.allocateMappedFileService.putRequestAndReturnMappedFile(nextFilePath,
                         nextNextFilePath, this.mappedFileSize);
@@ -226,8 +273,10 @@ public class MappedFileQueue {
                 }
             }
 
+            //放入到队列
             if (mappedFile != null) {
                 if (this.mappedFiles.isEmpty()) {
+                    //第一次创建
                     mappedFile.setFirstCreateInQueue(true);
                 }
                 this.mappedFiles.add(mappedFile);
@@ -270,8 +319,9 @@ public class MappedFileQueue {
             long diff = lastOffset - offset;
 
             final int maxDiff = this.mappedFileSize * 2;
-            if (diff > maxDiff)
+            if (diff > maxDiff) {
                 return false;
+            }
         }
 
         ListIterator<MappedFile> iterator = this.mappedFiles.listIterator();

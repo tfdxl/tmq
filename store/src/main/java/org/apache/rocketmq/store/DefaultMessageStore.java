@@ -239,7 +239,6 @@ public class DefaultMessageStore implements MessageStore {
             this.scheduledExecutorService.shutdown();
 
             try {
-
                 Thread.sleep(1000 * 3);
             } catch (InterruptedException e) {
                 log.error("shutdown Exception, ", e);
@@ -646,8 +645,7 @@ public class DefaultMessageStore implements MessageStore {
             SelectMappedBufferResult bufferConsumeQueue = consumeQueue.getIndexBuffer(consumeQueueOffset);
             if (bufferConsumeQueue != null) {
                 try {
-                    long offsetPy = bufferConsumeQueue.getByteBuffer().getLong();
-                    return offsetPy;
+                    return bufferConsumeQueue.getByteBuffer().getLong();
                 } finally {
                     bufferConsumeQueue.release();
                 }
@@ -1473,7 +1471,7 @@ public class DefaultMessageStore implements MessageStore {
         }
 
         private void deleteExpiredFiles() {
-            int deleteCount = 0;
+            int deleteCount;
             long fileReservedTime = DefaultMessageStore.this.getMessageStoreConfig().getFileReservedTime();
             int deletePhysicFilesInterval = DefaultMessageStore.this.getMessageStoreConfig().getDeleteCommitLogFilesInterval();
             int destroyMapedFileIntervalForcibly = DefaultMessageStore.this.getMessageStoreConfig().getDestroyMapedFileIntervalForcibly();
@@ -1613,9 +1611,13 @@ public class DefaultMessageStore implements MessageStore {
         }
 
         private void deleteExpiredFiles() {
+
+            //删除ConsumeQueue文件的时间间隔
             int deleteLogicsFilesInterval = DefaultMessageStore.this.getMessageStoreConfig().getDeleteConsumeQueueFilesInterval();
 
+            //commitLog的最小的offset
             long minOffset = DefaultMessageStore.this.commitLog.getMinOffset();
+
             if (minOffset > this.lastPhysicalMinOffset) {
                 this.lastPhysicalMinOffset = minOffset;
 
@@ -1837,6 +1839,5 @@ public class DefaultMessageStore implements MessageStore {
         public String getServiceName() {
             return ReputMessageService.class.getSimpleName();
         }
-
     }
 }

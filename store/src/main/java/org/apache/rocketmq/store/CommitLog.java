@@ -251,6 +251,7 @@ public class CommitLog {
                                                      final boolean readBody) {
         try {
             // 1 TOTAL SIZE
+            //msgSize
             int totalSize = byteBuffer.getInt();
 
             // 2 MAGIC CODE
