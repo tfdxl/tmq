@@ -60,13 +60,6 @@ public class ConstantExpression implements Expression {
 
         // only support Long.MIN_VALUE ~ Long.MAX_VALUE
         Number value = new Long(text);
-//        try {
-//            value = new Long(text);
-//        } catch (NumberFormatException e) {
-//            // The number may be too big to fit in a long.
-//            value = new BigDecimal(text);
-//        }
-
         long l = value.longValue();
         if (Integer.MIN_VALUE <= l && l <= Integer.MAX_VALUE) {
             value = Integer.valueOf(value.intValue());
