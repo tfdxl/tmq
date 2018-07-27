@@ -53,7 +53,6 @@ public class DefaultMessageStore implements MessageStore {
 
     private final MessageStoreConfig messageStoreConfig;
 
-    // CommitLog
     private final CommitLog commitLog;
 
     private final ConcurrentMap<String/* topic */, ConcurrentMap<Integer/* queueId */, ConsumeQueue>> consumeQueueTable;
@@ -232,10 +231,17 @@ public class DefaultMessageStore implements MessageStore {
         this.shutdown = false;
     }
 
+    /**
+     * 关闭消息存储
+     */
     public void shutdown() {
+
         if (!this.shutdown) {
+
+            //关闭
             this.shutdown = true;
 
+            //关闭调度器
             this.scheduledExecutorService.shutdown();
 
             try {
@@ -248,6 +254,7 @@ public class DefaultMessageStore implements MessageStore {
                 this.scheduleMessageService.shutdown();
             }
 
+            //关闭ha服务
             this.haService.shutdown();
 
             this.storeStatsService.shutdown();
@@ -259,6 +266,9 @@ public class DefaultMessageStore implements MessageStore {
             this.storeCheckpoint.flush();
             this.storeCheckpoint.shutdown();
 
+            /**
+             * 终于找到你，还好我没放弃，正常关闭服务的时候会删除abort文件
+             */
             if (this.runningFlags.isWriteable() && dispatchBehindBytes() == 0) {
                 this.deleteFile(StorePathConfigHelper.getAbortFile(this.messageStoreConfig.getStorePathRootDir()));
                 shutDownNormal = true;
@@ -1155,6 +1165,11 @@ public class DefaultMessageStore implements MessageStore {
         return false;
     }
 
+    /**
+     * 删除文件
+     *
+     * @param fileName
+     */
     private void deleteFile(final String fileName) {
         File file = new File(fileName);
         boolean result = file.delete();
@@ -1165,6 +1180,9 @@ public class DefaultMessageStore implements MessageStore {
      * @throws IOException
      */
     private void createTempFile() throws IOException {
+        /**
+         * 创建abort文件
+         */
         String fileName = StorePathConfigHelper.getAbortFile(this.messageStoreConfig.getStorePathRootDir());
         File file = new File(fileName);
         MappedFile.ensureDirOK(file.getParent());
@@ -1174,6 +1192,7 @@ public class DefaultMessageStore implements MessageStore {
 
     private void addScheduleTask() {
 
+        //定时清除文件
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
@@ -1181,6 +1200,7 @@ public class DefaultMessageStore implements MessageStore {
             }
         }, 1000 * 60, this.messageStoreConfig.getCleanResourceInterval(), TimeUnit.MILLISECONDS);
 
+        //定时文件检查
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {

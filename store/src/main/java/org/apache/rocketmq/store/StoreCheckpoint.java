@@ -29,15 +29,24 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
 
 public class StoreCheckpoint {
+
     private static final Logger log = LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
+
     private final RandomAccessFile randomAccessFile;
+
     private final FileChannel fileChannel;
+
     private final MappedByteBuffer mappedByteBuffer;
+
     private volatile long physicMsgTimestamp = 0;
+
     private volatile long logicsMsgTimestamp = 0;
+
     private volatile long indexMsgTimestamp = 0;
 
     public StoreCheckpoint(final String scpPath) throws IOException {
+
+        //创建文件
         File file = new File(scpPath);
         MappedFile.ensureDirOK(file.getParent());
         boolean fileExists = file.exists();
@@ -48,14 +57,22 @@ public class StoreCheckpoint {
 
         if (fileExists) {
             log.info("store checkpoint file exists, " + scpPath);
+
+            //物理消息
             this.physicMsgTimestamp = this.mappedByteBuffer.getLong(0);
+
+            //逻辑消息
             this.logicsMsgTimestamp = this.mappedByteBuffer.getLong(8);
+
+            //索引消息
             this.indexMsgTimestamp = this.mappedByteBuffer.getLong(16);
 
             log.info("store checkpoint file physicMsgTimestamp " + this.physicMsgTimestamp + ", "
                     + UtilAll.timeMillisToHumanString(this.physicMsgTimestamp));
+
             log.info("store checkpoint file logicsMsgTimestamp " + this.logicsMsgTimestamp + ", "
                     + UtilAll.timeMillisToHumanString(this.logicsMsgTimestamp));
+
             log.info("store checkpoint file indexMsgTimestamp " + this.indexMsgTimestamp + ", "
                     + UtilAll.timeMillisToHumanString(this.indexMsgTimestamp));
         } else {
@@ -76,6 +93,9 @@ public class StoreCheckpoint {
         }
     }
 
+    /**
+     * 写入checkpoint文件
+     */
     public void flush() {
         this.mappedByteBuffer.putLong(0, this.physicMsgTimestamp);
         this.mappedByteBuffer.putLong(8, this.logicsMsgTimestamp);
@@ -120,5 +140,4 @@ public class StoreCheckpoint {
     public void setIndexMsgTimestamp(long indexMsgTimestamp) {
         this.indexMsgTimestamp = indexMsgTimestamp;
     }
-
 }
