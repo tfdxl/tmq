@@ -37,6 +37,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class NamesrvController {
+
     private static final Logger log = LoggerFactory.getLogger(LoggerName.NAMESRV_LOGGER_NAME);
 
     private final NamesrvConfig namesrvConfig;
@@ -45,9 +46,14 @@ public class NamesrvController {
 
     private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryImpl(
             "NSScheduledThread"));
+
     private final KVConfigManager kvConfigManager;
+
     private final RouteInfoManager routeInfoManager;
 
+    /**
+     * 他妈的真正的烂服务器
+     */
     private RemotingServer remotingServer;
 
     private BrokerHousekeepingService brokerHousekeepingService;
@@ -94,7 +100,7 @@ public class NamesrvController {
             public void run() {
                 NamesrvController.this.kvConfigManager.printAllPeriodically();
             }
-        }, 1, 10, TimeUnit.MINUTES);
+        }, 1, 1, TimeUnit.MINUTES);
 
         return true;
     }
