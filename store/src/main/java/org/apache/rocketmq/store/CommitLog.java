@@ -414,6 +414,9 @@ public class CommitLog {
         this.confirmOffset = phyOffset;
     }
 
+    /**
+     * 异常恢复
+     */
     public void recoverAbnormally() {
         // recover by the minimum time stamp
         boolean checkCRCOnRecover = this.defaultMessageStore.getMessageStoreConfig().isCheckCRCOnRecover();
