@@ -1229,10 +1229,13 @@ public class DefaultMessageStore implements MessageStore {
     }
 
     private boolean loadConsumeQueue() {
+        //获取consumequeue所在的目录
         File dirLogic = new File(StorePathConfigHelper.getStorePathConsumeQueue(this.messageStoreConfig.getStorePathRootDir()));
+        //列出所有的文件
         File[] fileTopicList = dirLogic.listFiles();
         if (fileTopicList != null) {
 
+            //获取所有的topic下面的queueid
             for (File fileTopic : fileTopicList) {
                 String topic = fileTopic.getName();
 
@@ -1288,7 +1291,7 @@ public class DefaultMessageStore implements MessageStore {
     private void putConsumeQueue(final String topic, final int queueId, final ConsumeQueue consumeQueue) {
         ConcurrentMap<Integer/* queueId */, ConsumeQueue> map = this.consumeQueueTable.get(topic);
         if (null == map) {
-            map = new ConcurrentHashMap<Integer/* queueId */, ConsumeQueue>();
+            map = new ConcurrentHashMap<>();
             map.put(queueId, consumeQueue);
             this.consumeQueueTable.put(topic, map);
         } else {

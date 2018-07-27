@@ -161,15 +161,21 @@ public class MappedFile extends ReferenceResource {
     }
 
     private void init(final String fileName, final int fileSize) throws IOException {
+
+        //文件名
         this.fileName = fileName;
+        //文件大小
         this.fileSize = fileSize;
         this.file = new File(fileName);
+        //文件开始的整个的offset
         this.fileFromOffset = Long.parseLong(this.file.getName());
         boolean ok = false;
 
+        //保障服务录OK的
         ensureDirOK(this.file.getParent());
 
         try {
+            //获取文件的channel
             this.fileChannel = new RandomAccessFile(this.file, "rw").getChannel();
             this.mappedByteBuffer = this.fileChannel.map(MapMode.READ_WRITE, 0, fileSize);
             TOTAL_MAPPED_VIRTUAL_MEMORY.addAndGet(fileSize);
@@ -208,6 +214,13 @@ public class MappedFile extends ReferenceResource {
         return appendMessagesInner(messageExtBatch, cb);
     }
 
+    /**
+     * 追加消息
+     *
+     * @param messageExt
+     * @param cb
+     * @return
+     */
     public AppendMessageResult appendMessagesInner(final MessageExt messageExt, final AppendMessageCallback cb) {
         assert messageExt != null;
         assert cb != null;
@@ -217,7 +230,7 @@ public class MappedFile extends ReferenceResource {
         if (currentPos < this.fileSize) {
             ByteBuffer byteBuffer = writeBuffer != null ? writeBuffer.slice() : this.mappedByteBuffer.slice();
             byteBuffer.position(currentPos);
-            AppendMessageResult result = null;
+            AppendMessageResult result;
             if (messageExt instanceof MessageExtBrokerInner) {
                 result = cb.doAppend(this.getFileFromOffset(), byteBuffer, this.fileSize - currentPos, (MessageExtBrokerInner) messageExt);
             } else if (messageExt instanceof MessageExtBatch) {
