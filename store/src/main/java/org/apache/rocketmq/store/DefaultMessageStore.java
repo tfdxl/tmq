@@ -776,8 +776,7 @@ public class DefaultMessageStore implements MessageStore {
             try {
                 final long phyOffset = result.getByteBuffer().getLong();
                 final int size = result.getByteBuffer().getInt();
-                long storeTime = this.getCommitLog().pickupStoreTimestamp(phyOffset, size);
-                return storeTime;
+                return this.getCommitLog().pickupStoreTimestamp(phyOffset, size);
             } catch (Exception ignored) {
             } finally {
                 result.release();
@@ -985,7 +984,7 @@ public class DefaultMessageStore implements MessageStore {
 
     public Map<String, Long> getMessageIds(final String topic, final int queueId, long minOffset, long maxOffset,
                                            SocketAddress storeHost) {
-        Map<String, Long> messageIds = new HashMap<String, Long>();
+        Map<String, Long> messageIds = new HashMap<>();
         if (this.shutdown) {
             return messageIds;
         }
@@ -1093,7 +1092,7 @@ public class DefaultMessageStore implements MessageStore {
     public ConsumeQueue findConsumeQueue(String topic, int queueId) {
         ConcurrentMap<Integer, ConsumeQueue> map = consumeQueueTable.get(topic);
         if (null == map) {
-            ConcurrentMap<Integer, ConsumeQueue> newMap = new ConcurrentHashMap<Integer, ConsumeQueue>(128);
+            ConcurrentMap<Integer, ConsumeQueue> newMap = new ConcurrentHashMap<>(128);
             ConcurrentMap<Integer, ConsumeQueue> oldMap = consumeQueueTable.putIfAbsent(topic, newMap);
             if (oldMap != null) {
                 map = oldMap;
@@ -1223,7 +1222,7 @@ public class DefaultMessageStore implements MessageStore {
                                 MixAll.string2FileNotSafe(stack, fileName);
                             }
                         }
-                    } catch (Exception e) {
+                    } catch (Exception ignored) {
                     }
                 }
             }
@@ -1643,9 +1642,7 @@ public class DefaultMessageStore implements MessageStore {
             if (minOffset > this.lastPhysicalMinOffset) {
                 this.lastPhysicalMinOffset = minOffset;
 
-                ConcurrentMap<String, ConcurrentMap<Integer, ConsumeQueue>> tables = DefaultMessageStore.this.consumeQueueTable;
-
-                for (ConcurrentMap<Integer, ConsumeQueue> maps : tables.values()) {
+                for (ConcurrentMap<Integer, ConsumeQueue> maps : DefaultMessageStore.this.consumeQueueTable.values()) {
                     for (ConsumeQueue logic : maps.values()) {
                         int deleteCount = logic.deleteExpiredFile(minOffset);
 
