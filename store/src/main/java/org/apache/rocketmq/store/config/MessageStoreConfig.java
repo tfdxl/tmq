@@ -16,9 +16,10 @@
  */
 package org.apache.rocketmq.store.config;
 
-import java.io.File;
 import org.apache.rocketmq.common.annotation.ImportantField;
 import org.apache.rocketmq.store.ConsumeQueue;
+
+import java.io.File;
 
 public class MessageStoreConfig {
     //The root directory in which the log data is kept
@@ -28,7 +29,7 @@ public class MessageStoreConfig {
     //The directory in which the commitlog is kept
     @ImportantField
     private String storePathCommitLog = System.getProperty("user.home") + File.separator + "store"
-        + File.separator + "commitlog";
+            + File.separator + "commitlog";
 
     // CommitLog file size,default is 1G
     private int mapedFileSizeCommitLog = 1024 * 1024 * 1024;
@@ -94,53 +95,87 @@ public class MessageStoreConfig {
     private int flushLeastPagesWhenWarmMapedFile = 1024 / 4 * 16;
     // How many pages are to be flushed when flush ConsumeQueue
     private int flushConsumeQueueLeastPages = 2;
+
     private int flushCommitLogThoroughInterval = 1000 * 10;
+
     private int commitCommitLogThoroughInterval = 200;
+
     private int flushConsumeQueueThoroughInterval = 1000 * 60;
+
     @ImportantField
     private int maxTransferBytesOnMessageInMemory = 1024 * 256;
+
     @ImportantField
     private int maxTransferCountOnMessageInMemory = 32;
+
     @ImportantField
     private int maxTransferBytesOnMessageInDisk = 1024 * 64;
+
     @ImportantField
     private int maxTransferCountOnMessageInDisk = 8;
+
     @ImportantField
     private int accessMessageInMemoryMaxRatio = 40;
+
     @ImportantField
     private boolean messageIndexEnable = true;
+
     private int maxHashSlotNum = 5000000;
+
     private int maxIndexNum = 5000000 * 4;
+
     private int maxMsgsNumBatch = 64;
+
     @ImportantField
     private boolean messageIndexSafe = false;
+
     private int haListenPort = 10912;
+
     private int haSendHeartbeatInterval = 1000 * 5;
+
     private int haHousekeepingInterval = 1000 * 20;
+
     private int haTransferBatchSize = 1024 * 32;
+
     @ImportantField
     private String haMasterAddress = null;
+
     private int haSlaveFallbehindMax = 1024 * 1024 * 256;
+
     @ImportantField
     private BrokerRole brokerRole = BrokerRole.ASYNC_MASTER;
+
     @ImportantField
     private FlushDiskType flushDiskType = FlushDiskType.ASYNC_FLUSH;
+
     private int syncFlushTimeout = 1000 * 5;
+
     private String messageDelayLevel = "1s 5s 10s 30s 1m 2m 3m 4m 5m 6m 7m 8m 9m 10m 20m 30m 1h 2h";
+
     private long flushDelayOffsetInterval = 1000 * 10;
+
     @ImportantField
     private boolean cleanFileForciblyEnable = true;
+
     private boolean warmMapedFileEnable = false;
+
     private boolean offsetCheckInSlave = false;
+
     private boolean debugLockEnable = false;
+
     private boolean duplicationEnable = false;
+
     private boolean diskFallRecorded = true;
+
     private long osPageCacheBusyTimeOutMills = 1000;
+
     private int defaultQueryMaxNum = 32;
 
     @ImportantField
     private boolean transientStorePoolEnable = false;
+
     private int transientStorePoolSize = 5;
+
     private boolean fastFailIfNoBufferInStorePool = false;
 
     public boolean isDebugLockEnable() {
@@ -611,7 +646,7 @@ public class MessageStoreConfig {
      */
     public boolean isTransientStorePoolEnable() {
         return transientStorePoolEnable && FlushDiskType.ASYNC_FLUSH == getFlushDiskType()
-            && BrokerRole.SLAVE != getBrokerRole();
+                && BrokerRole.SLAVE != getBrokerRole();
     }
 
     public void setTransientStorePoolEnable(final boolean transientStorePoolEnable) {

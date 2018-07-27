@@ -100,10 +100,6 @@ public class HAService {
         return connectionCount;
     }
 
-    // public void notifyTransferSome() {
-    // this.groupTransferService.notifyTransferSome();
-    // }
-
     public void start() throws Exception {
         this.acceptSocketService.beginAccept();
         this.acceptSocketService.start();
