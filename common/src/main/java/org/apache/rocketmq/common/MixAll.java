@@ -302,9 +302,11 @@ public class MixAll {
     }
 
     public static void properties2Object(final Properties p, final Object object) {
-        Method[] methods = object.getClass().getMethods();
+        log.info("获取对象的所有的方法");
+        final Method[] methods = object.getClass().getMethods();
         for (Method method : methods) {
             String mn = method.getName();
+            log.info("获取到了方法 method:{}", mn);
             if (mn.startsWith("set")) {
                 try {
                     String tmp = mn.substring(4);
@@ -312,11 +314,12 @@ public class MixAll {
 
                     String key = first.toLowerCase() + tmp;
                     String property = p.getProperty(key);
+                    log.info("读取到了配置,key:{} ===> value:{}", key, property);
                     if (property != null) {
                         Class<?>[] pt = method.getParameterTypes();
                         if (pt != null && pt.length > 0) {
                             String cn = pt[0].getSimpleName();
-                            Object arg = null;
+                            Object arg;
                             if (cn.equals("int") || cn.equals("Integer")) {
                                 arg = Integer.parseInt(property);
                             } else if (cn.equals("long") || cn.equals("Long")) {
