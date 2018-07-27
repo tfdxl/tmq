@@ -17,11 +17,12 @@
 
 package org.apache.rocketmq.common.stats;
 
+import org.apache.rocketmq.common.UtilAll;
+import org.slf4j.Logger;
+
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-import org.apache.rocketmq.common.UtilAll;
-import org.slf4j.Logger;
 
 public class MomentStatsItem {
 
@@ -33,7 +34,7 @@ public class MomentStatsItem {
     private final Logger log;
 
     public MomentStatsItem(String statsName, String statsKey,
-        ScheduledExecutorService scheduledExecutorService, Logger log) {
+                           ScheduledExecutorService scheduledExecutorService, Logger log) {
         this.statsName = statsName;
         this.statsKey = statsKey;
         this.scheduledExecutorService = scheduledExecutorService;
@@ -55,10 +56,11 @@ public class MomentStatsItem {
     }
 
     public void printAtMinutes() {
+
         log.info(String.format("[%s] [%s] Stats Every 5 Minutes, Value: %d",
-            this.statsName,
-            this.statsKey,
-            this.value.get()));
+                this.statsName,
+                this.statsKey,
+                this.value.get()));
     }
 
     public AtomicLong getValue() {
