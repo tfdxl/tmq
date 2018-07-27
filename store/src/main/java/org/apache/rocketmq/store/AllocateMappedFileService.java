@@ -29,6 +29,7 @@ import java.util.ServiceLoader;
 import java.util.concurrent.*;
 
 /**
+ * 提前创建mappedfile
  * Create MappedFile in advance
  */
 public class AllocateMappedFileService extends ServiceThread {
@@ -37,6 +38,7 @@ public class AllocateMappedFileService extends ServiceThread {
 
     private static int waitTimeOut = 1000 * 5;
 
+    //请求表
     private ConcurrentMap<String, AllocateRequest> requestTable =
             new ConcurrentHashMap<String, AllocateRequest>();
 
