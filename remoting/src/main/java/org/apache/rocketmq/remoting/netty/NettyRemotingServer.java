@@ -209,6 +209,7 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
             ChannelFuture sync = this.serverBootstrap.bind().sync();
             InetSocketAddress addr = (InetSocketAddress) sync.channel().localAddress();
             this.port = addr.getPort();
+            log.info("Server started at port:{}", port);
         } catch (InterruptedException e1) {
             throw new RuntimeException("this.serverBootstrap.bind().sync() InterruptedException", e1);
         }
