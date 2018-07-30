@@ -41,9 +41,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BrokerOuterAPI {
+
     private static final Logger log = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
+
     private final RemotingClient remotingClient;
+
     private final TopAddressing topAddressing = new TopAddressing(MixAll.getWSAddr());
+
     private String nameSrvAddr = null;
 
     public BrokerOuterAPI(final NettyClientConfig nettyClientConfig) {
@@ -195,6 +199,7 @@ public class BrokerOuterAPI {
         //获取所有的nameserver地址
         List<String> nameServerAddressList = this.remotingClient.getNameServerAddressList();
         if (nameServerAddressList != null) {
+            //遍历nameserver
             for (String namesrvAddr : nameServerAddressList) {
                 try {
                     this.unregisterBroker(namesrvAddr, clusterName, brokerAddr, brokerName, brokerId);
