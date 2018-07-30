@@ -88,6 +88,10 @@ public class ConsumeQueue {
     }
 
     public boolean load() {
+
+        /**
+         * 交给底层的mappedFileQueue进行加载
+         */
         boolean result = this.mappedFileQueue.load();
         log.info("load consume queue " + this.topic + "-" + this.queueId + " " + (result ? "OK" : "Failed"));
         if (isExtReadEnable()) {
@@ -112,9 +116,9 @@ public class ConsumeQueue {
             long maxExtAddr = 1;
             while (true) {
                 for (int i = 0; i < mappedFileSizeLogics; i += CQ_STORE_UNIT_SIZE) {
-                    long offset = byteBuffer.getLong();
-                    int size = byteBuffer.getInt();
-                    long tagsCode = byteBuffer.getLong();
+                    long offset = byteBuffer.getLong();//8
+                    int size = byteBuffer.getInt();//4
+                    long tagsCode = byteBuffer.getLong();//8
 
                     if (offset >= 0 && size > 0) {
                         mappedFileOffset = i + CQ_STORE_UNIT_SIZE;
@@ -332,6 +336,12 @@ public class ConsumeQueue {
         return lastOffset;
     }
 
+    /**
+     * 内存里面的文件刷新到磁盘上去
+     *
+     * @param flushLeastPages
+     * @return
+     */
     public boolean flush(final int flushLeastPages) {
         boolean result = this.mappedFileQueue.flush(flushLeastPages);
         if (isExtReadEnable()) {
