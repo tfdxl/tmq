@@ -46,13 +46,19 @@ public class StoreCheckpoint {
 
     public StoreCheckpoint(final String scpPath) throws IOException {
 
-        //创建文件
+        //创建文件，先他妈的有文件
         File file = new File(scpPath);
+
+        //保证父目录存在
         MappedFile.ensureDirOK(file.getParent());
+
         boolean fileExists = file.exists();
 
+        //随机访问文件
         this.randomAccessFile = new RandomAccessFile(file, "rw");
+
         this.fileChannel = this.randomAccessFile.getChannel();
+
         this.mappedByteBuffer = fileChannel.map(MapMode.READ_WRITE, 0, MappedFile.OS_PAGE_SIZE);
 
         if (fileExists) {
